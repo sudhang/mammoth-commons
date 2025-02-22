@@ -1,8 +1,4 @@
-from demonstrator.backend.loaders import (
-    dataset_loaders,
-    model_loaders,
-    analysis_methods,
-)
+from demonstrator.backend.catalogue_loaders import registry
 
 # Template prefix with updated styling and centered navbar
 template_prefix = """
@@ -169,9 +165,9 @@ def prepare(catalogue, page_title):
 
 # Generate pages with the sidebar and content
 for page, (catalogue, page_title) in {
-    "datasets.html": (dataset_loaders, "Dataset loaders"),
-    "models.html": (model_loaders, "Model loaders"),
-    "analysis_methods.html": (analysis_methods, "Analysis metrics"),
+    "datasets.html": (registry.dataset_loaders, "Dataset loaders"),
+    "models.html": (registry.model_loaders, "Model loaders"),
+    "analysis_methods.html": (registry.analysis_methods, "Analysis metrics"),
 }.items():
     sidebar_content, main_content = prepare(catalogue, page_title)
     full_content = (

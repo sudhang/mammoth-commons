@@ -89,8 +89,8 @@
 <a href='#uci'>Uci</a>
 <a href='#custom-csv'>Custom csv</a>
 <a href='#csv-rankings'>Csv rankings</a>
+<a href='#researchers'>Researchers</a>
 <a href='#graph'>Graph</a>
-<a href='#graph-csv'>Graph csv</a>
 <a href='#images'>Images</a>
 <a href='#image-pairs'>Image pairs</a>
 
@@ -225,6 +225,11 @@
 <b>Parameters</b><br>Path
 Delimiter
 <br>
+<h2 id='researchers'>Researchers</h2>
+<p><p>This is a Loader to load .csv files with information about researchers The <code>papers path</code> and <code>papers affiliations</code> should be given relative to your locally running instance (e.g.: <em>./data/researchers/Top&#95;researchers.csv</em>) The <code>Delimiter</code> should match the CSV file you have (e.g.: '|')</p> </p>
+<b>Parameters</b><br>Papers path
+Papers affiliations
+<br>
 <h2 id='graph'>Graph</h2>
 <p><p>Loads the edges of a graph organized as rows of a comma-delimited file.</p> </p>
 <b>Parameters</b><br><button
@@ -237,42 +242,6 @@ Delimiter
                           data-name="Path"
                           onclick="showDescriptionModal(this)">
                           <i class="bi bi-info-circle"></i> Path
-                        </button>
-<br>
-<h2 id='graph-csv'>Graph csv</h2>
-<p><p>This loads the nodes and edges of a graph.</p> </p>
-<b>Parameters</b><br><button
-                          type="button"
-                          class="btn btn-light"
-                          data-bs-toggle="tooltip"
-                          data-bs-placement="top"
-                          title=" A csv file containing the node identifiers as the first column."
-                          data-description=" A csv file containing the node identifiers as the first column."
-                          data-name="Path nodes"
-                          onclick="showDescriptionModal(this)">
-                          <i class="bi bi-info-circle"></i> Path nodes
-                        </button>
-<button
-                          type="button"
-                          class="btn btn-light"
-                          data-bs-toggle="tooltip"
-                          data-bs-placement="top"
-                          title=" A csv file, where each raw corresponds to a pair of node identifiers of an edge."
-                          data-description=" A csv file, where each raw corresponds to a pair of node identifiers of an edge."
-                          data-name="Path edges"
-                          onclick="showDescriptionModal(this)">
-                          <i class="bi bi-info-circle"></i> Path edges
-                        </button>
-<button
-                          type="button"
-                          class="btn btn-light"
-                          data-bs-toggle="tooltip"
-                          data-bs-placement="top"
-                          title=" A comma separated list of attributes to retain from the dataset."
-                          data-description=" A comma separated list of attributes to retain from the dataset."
-                          data-name="Attributes"
-                          onclick="showDescriptionModal(this)">
-                          <i class="bi bi-info-circle"></i> Attributes
                         </button>
 <br>
 <h2 id='images'>Images</h2>

@@ -87,7 +87,9 @@
     <div class="side-menu">
         <a href='#card'>Card</a>
 <a href='#interactive-report'>Interactive report</a>
-<a href='#interactive-sklearn-report'>Interactive sklearn report</a>
+<a href='#sklearn-report'>Sklearn report</a>
+<a href='#optimal-transport'>Optimal transport</a>
+<a href='#bias-scan'>Bias scan</a>
 <a href='#image-bias-analysis'>Image bias analysis</a>
 <a href='#facex-regions'>Facex regions</a>
 <a href='#facex-embeddings'>Facex embeddings</a>
@@ -102,14 +104,14 @@
             <div class="container">
 <h1 class='display-4 text-center my-4'>Analysis metrics</h1>
 <h2 id='card'>Card</h2>
-<p><p>Creates a model card using the <a href="https://github.com/mever-team/FairBench">FairBench</a> library. The card includes several fairness stamps; these are specific measures of bias or fairness that are commonly used in the algorithmic fairness literature. Only the most prominent of those measures are used as stamps, and they correspond to a perfunctory fairness analysis.</p>  <p>This module computes all applicable FairBench stamps, which summarize behavior across all population groups or intersectional subgroups. Multiple sensitive attributes may be present, such as gender, age, and race. Furthermore, each of those attributes may obtain multiple values, as happens when multiple genders or races are considered. Numeric attributes, like age, are normalized to the range [0,1] and we consider the result as truth values of membership to the group of the maximum value - as opposed to membership to the group with minimum value. A different stamp is computed for each prediction label.</p>  <p>You may optionally create intersectional subgroups, that is, create a separate subgroup for each combination of sensitive attribute values. Many of those groups will have few members if there are too many attributes, and empty groups are ignored during the analysis.</p>  <p>The created model card contains exact descriptions of methods used to compute fairness under the selected stamps, and it lists population groups that were taken into account These come alongside an extensive list of caveats and recommendations that help the reader get a grasp on how they should account for the social context. This material is retrieved from FairBench's online socio-technical database generated through MAMMOth's multidisciplinary activities.</p>  <p>Finally, the generated model card may contain details about out-of-the-box datasets. To get the full picture, a detailed fairness report that also allows you to backtrack computations is available in the <code>interactive report</code> module.</p> </p>
+<p><p>Generates a fairness and bias report using the <a href="https://github.com/mever-team/FairBench">FairBench</a> library. This explores many kinds of bias to paint a broad picture and help you decide on what is problematic and what is acceptable behavior. The generated report can be viewed in three different formats, where the model card contains a subset of results but attaches to these socio-technical concerns to be taken into account:</p>  <ol> <li>A summary table of results.</li> <li>A simplified model card that includes concerns.</li> <li>The full report, including details.</li> </ol>  <p>The module's report summarizes how a model behaves on a provided dataset across different population groups. These groups are based on sensitive attributes like gender, age, and race. Each attribute can have multiple values, such as several genders or races. Numeric attributes, like age, are normalized to the range [0,1] and treated as fuzzy values, where 0 indicates membership to a fuzzy group of "small" values, and 1 indicates membership to a fuzzy group of "large" values. A separate set of fairness metrics is calculated for each prediction label.</p>  <p>If intersectional subgroup analysis is enabled, separate subgroups are created for each combination of sensitive attribute values. However, if there are too many attributes, some groups will be small or empty. Empty groups are ignored in the analysis. The report may also include information about built-in datasets.</p> </p>
 <b>Parameters</b><br><button
                           type="button"
                           class="btn btn-light"
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
-                          title=" Whether to consider all non-empty group intersections during analysis. This does nothing if there is only one sensitive attribute, but may also be computationally intensive if too many group intersections are selected."
-                          data-description=" Whether to consider all non-empty group intersections during analysis. This does nothing if there is only one sensitive attribute, but may also be computationally intensive if too many group intersections are selected."
+                          title=" Whether to consider all non-empty group intersections during analysis. This does nothing if there is only one sensitive attribute. It could be computationally intensive if too many group intersections are selected."
+                          data-description=" Whether to consider all non-empty group intersections during analysis. This does nothing if there is only one sensitive attribute. It could be computationally intensive if too many group intersections are selected."
                           data-name="Intersectional"
                           onclick="showDescriptionModal(this)">
                           <i class="bi bi-info-circle"></i> Intersectional
@@ -119,11 +121,22 @@
                           class="btn btn-light"
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
-                          title=" Whether to compare groups pairwise, or each group to the whole population. For example, if the 4/5ths rule stamp is applicable, it computes positive rates and obtains the minimum ratio, either across all pairs of groups (for pairwise comparison) or otherwise between each group and the total population."
-                          data-description=" Whether to compare groups pairwise, or each group to the whole population. For example, if the 4/5ths rule stamp is applicable, it computes positive rates and obtains the minimum ratio, either across all pairs of groups (for pairwise comparison) or otherwise between each group and the total population."
+                          title=" Whether to compare groups pairwise, or each group to the behavior of the whole population."
+                          data-description=" Whether to compare groups pairwise, or each group to the behavior of the whole population."
                           data-name="Compare groups"
                           onclick="showDescriptionModal(this)">
                           <i class="bi bi-info-circle"></i> Compare groups
+                        </button>
+<button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" Show only results where the deviation from ideal values exceeds the given threshold. If nothing is shown, fairness is not necessarily achieved, but this is a good way to identify the most prominent biases. If value of 0 is set, all report values are shown, including those that have no set ideal value."
+                          data-description=" Show only results where the deviation from ideal values exceeds the given threshold. If nothing is shown, fairness is not necessarily achieved, but this is a good way to identify the most prominent biases. If value of 0 is set, all report values are shown, including those that have no set ideal value."
+                          data-name="Minimum shown deviation"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Minimum shown deviation
                         </button>
 <br>
 <h2 id='interactive-report'>Interactive report</h2>
@@ -151,15 +164,15 @@
                           <i class="bi bi-info-circle"></i> Compare groups
                         </button>
 <br>
-<h2 id='interactive-sklearn-report'>Interactive sklearn report</h2>
-<p><p>Creates an interactive report using the FairBench library, after running an internal training-test split on a basic sklearn model. The report creates traceable evaluations that you can shift through to find sources of unfairness on a common task.</p> </p>
+<h2 id='sklearn-report'>Sklearn report</h2>
+<p><p>One way to evaluate the fairness of a dataset is by testing for biases using simple models with limited degrees of freedom. This module audits datasets by training such models provided by the <a href="https://scikit-learn.org/stable/index.html">scikit-learn</a> library on half of the dataset. The second half is then used as test data to assess predictive performance and detect classification or scoring biases.</p>  <p>Test data are used to generate a fairness and bias report using the <a href="https://fairbench.readthedocs.io/">FairBench</a> library. If strong biases appear in the simple models that are explored, they may also persist in more complex models trained on the same data. To focus on the most significant biases, adjust the minimum shown deviation parameter. The report provides multiple types of fairness and bias assessments and can be viewed in three different formats, where the model card contains a subset of results but attaches to these socio-technical concerns to be taken into account:</p>  <ol> <li>A summary table of results.</li> <li>A simplified model card with key fairness concerns.</li> <li>A full detailed report.</li> </ol>  <p>The module's report summarizes how a model behaves on a provided dataset across different population groups. These groups are based on sensitive attributes like gender, age, and race. Each attribute can have multiple values, such as several genders or races. Numeric attributes, like age, are normalized to the range [0,1] and treated as fuzzy values, where 0 indicates membership to a fuzzy group of "small" values, and 1 indicates membership to a fuzzy group of "large" values. A separate set of fairness metrics is calculated for each prediction label.</p>  <p>If intersectional subgroup analysis is enabled, separate subgroups are created for each combination of sensitive attribute values. However, if there are too many attributes, some groups will be small or empty. Empty groups are ignored in the analysis. The report may also include information about built-in datasets.</p> </p>
 <b>Parameters</b><br><button
                           type="button"
                           class="btn btn-light"
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
-                          title=" Which sklearn predictor should be used."
-                          data-description=" Which sklearn predictor should be used."
+                          title=" Which simple model should be used."
+                          data-description=" Which simple model should be used."
                           data-name="Predictor"
                           onclick="showDescriptionModal(this)">
                           <i class="bi bi-info-circle"></i> Predictor
@@ -169,8 +182,8 @@
                           class="btn btn-light"
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
-                          title=" Whether to consider all non-empty group intersections during analysis. This does nothing if there is only one sensitive attribute."
-                          data-description=" Whether to consider all non-empty group intersections during analysis. This does nothing if there is only one sensitive attribute."
+                          title=" Whether to consider all non-empty group intersections during analysis. This does nothing if there is only one sensitive attribute. It could be computationally intensive if too many group intersections are selected."
+                          data-description=" Whether to consider all non-empty group intersections during analysis. This does nothing if there is only one sensitive attribute. It could be computationally intensive if too many group intersections are selected."
                           data-name="Intersectional"
                           onclick="showDescriptionModal(this)">
                           <i class="bi bi-info-circle"></i> Intersectional
@@ -180,8 +193,8 @@
                           class="btn btn-light"
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
-                          title=" Whether to compare groups pairwise, or each group to the whole population."
-                          data-description=" Whether to compare groups pairwise, or each group to the whole population."
+                          title=" Whether to compare groups pairwise, or each group to the behavior of the whole population."
+                          data-description=" Whether to compare groups pairwise, or each group to the behavior of the whole population."
                           data-name="Compare groups"
                           onclick="showDescriptionModal(this)">
                           <i class="bi bi-info-circle"></i> Compare groups
@@ -191,22 +204,50 @@
                           class="btn btn-light"
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
-                          title=" How to display results. You can choose to view a fairness model card which does not have too many details, a full report, or a summary table."
-                          data-description=" How to display results. You can choose to view a fairness model card which does not have too many details, a full report, or a summary table."
-                          data-name="View"
+                          title=" Show only results where the deviation from ideal values exceeds the given threshold. If nothing is shown, fairness is not necessarily achieved, but this is a good way to identify the most prominent biases. If value of 0 is set, all report values are shown, including those that have no set ideal value."
+                          data-description=" Show only results where the deviation from ideal values exceeds the given threshold. If nothing is shown, fairness is not necessarily achieved, but this is a good way to identify the most prominent biases. If value of 0 is set, all report values are shown, including those that have no set ideal value."
+                          data-name="Minimum shown deviation"
                           onclick="showDescriptionModal(this)">
-                          <i class="bi bi-info-circle"></i> View
+                          <i class="bi bi-info-circle"></i> Minimum shown deviation
+                        </button>
+<br>
+<h2 id='optimal-transport'>Optimal transport</h2>
+<p><p>Creates an optimal transport evaluation based on the implementation provided by the AIF360 library. The evaluation computes the Wasserstein distance that reflects the cost of transforming the predictive distributions between sensitive attribute groups.</p>  <p>Optimal Transport (OT) is a field of mathematics which studies the geometry of probability spaces. Among its many contributions, OT provides a principled way to compare and align probability distributions by taking into account the underlying geometry of the considered metric space. As a mathematical problem, it was first introduced by Gaspard Monge in 1781. It addresses the task of determining the most efficient method for transporting mass from one distribution to another. In this problem, the cost associated with moving a unit of mass from one position to another is referred to as the ground cost. The primary objective of OT is to minimize the total cost incurred when moving one mass distribution onto another. </p><p>  <p>OT can be used to detect model-induced bias by calculating the a cost known as Earth Mover's distance or Wasserstein distance between the distribution of ground truth labels and model predictions for each of the protected groups. If its value is close to 1, the model is biased towards this group. </p></p>  <p><b>License</b><p><i>Parts of the above description are adapted from AIF360 (<a href="https://github.com/Trusted-AI/AIF360">https://github.com/Trusted-AI/AIF360</a>), which is licensed under Apache License 2.0.</i></p></p> </p>
+<b>Parameters</b><br><button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" Transport distances below the given threshold are considered negligible."
+                          data-description=" Transport distances below the given threshold are considered negligible."
+                          data-name="Threshold"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Threshold
+                        </button>
+<br>
+<h2 id='bias-scan'>Bias scan</h2>
+<p><p>Performs a scan for the most biased attribute intersection in the dataset. Any sensitive attributes that are already known will be <b>excluded</b> from the scan. That is, you can condition the scan to discover more attributes other than those declared as sensitive (these may not be actually sensitive, but set so because you are trying to find more subtle biases). To start a scan for the first time, do not set any sensitive attributes. A paper describing how this approach is implemented to estimate the intersection in linear rather than exponential time is available <a href="https://arxiv.org/pdf/1611.08292">here</a>.</p> </p>
+<b>Parameters</b><br><button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" The higher the penalty, the less complex the highest scoring subset that gets returned is."
+                          data-description=" The higher the penalty, the less complex the highest scoring subset that gets returned is."
+                          data-name="Penalty"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Penalty
                         </button>
 <button
                           type="button"
                           class="btn btn-light"
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
-                          title=" Show only results where the deviation from ideal values exceeds the given threshold. If nothing is shown, it does not mean that fairness is achieved, but this is a good way to identify the most prominent biases. If value of 0 is set (default) then all results are shown."
-                          data-description=" Show only results where the deviation from ideal values exceeds the given threshold. If nothing is shown, it does not mean that fairness is achieved, but this is a good way to identify the most prominent biases. If value of 0 is set (default) then all results are shown."
-                          data-name="Minimum shown deviation"
+                          title=" The distribution used to computer p-values."
+                          data-description=" The distribution used to computer p-values."
+                          data-name="Scoring"
                           onclick="showDescriptionModal(this)">
-                          <i class="bi bi-info-circle"></i> Minimum shown deviation
+                          <i class="bi bi-info-circle"></i> Scoring
                         </button>
 <br>
 <h2 id='image-bias-analysis'>Image bias analysis</h2>
@@ -279,11 +320,51 @@
 Compare groups
 <br>
 <h2 id='exposure-distance-comparison'>Exposure distance comparison</h2>
-<p><p>Compute the exposure distance between the protected and non-protected groups in the dataset and ranking. Parameters:</p>  <ul> <li><p><code>N runs</code>: Choose a natural number between 1 and 100</p></li> <li><p><code>Sensitive attributes</code>: Which attribute is relevant for fairness analysis.  To select this, click the blue '+' and then use the dropdown.  Currently, only <em>Gender</em> is supported</p></li> <li><p><code>Protected</code>: The protected group for the fairness analysis. Currently, only <em>female</em> or <em>male</em> are supported</p></li> <li><p><code>Sampling Attribute</code>: The value by which we group the analysis for finer-grained results. One of <em>Nationality&#95;IncomeGroup</em> or <em>Nationality&#95;Region</em>.</p></li> <li><p><code>Ranking Variable</code>: This refers to the main criteria by which ranking is done.  One of <em>Degree</em>, <em>Citations</em> or <em>Productivity</em></p></li> </ul> </p>
-<b>Parameters</b><br>N runs
-Protected
-Sampling attribute
-Ranking variable
+<p><p>Compute the exposure distance between the protected and non-protected groups in the dataset and ranking. Sensitive attributes is a comma-separated list of the attributes relevant for fairness analysis. WCurrently, only <em>Gender</em> is supported.</p> </p>
+<b>Parameters</b><br><button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" Choose a natural number between 1 and 100."
+                          data-description=" Choose a natural number between 1 and 100."
+                          data-name="N runs"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> N runs
+                        </button>
+<button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" The protected group for the fairness analysis. Currently, only *female* or *male* are supported."
+                          data-description=" The protected group for the fairness analysis. Currently, only *female* or *male* are supported."
+                          data-name="Protected"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Protected
+                        </button>
+<button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" The value by which we group the analysis for finer-grained results. One of *Nationality&#95;IncomeGroup* or *Nationality&#95;Region*."
+                          data-description=" The value by which we group the analysis for finer-grained results. One of *Nationality&#95;IncomeGroup* or *Nationality&#95;Region*."
+                          data-name="Sampling attribute"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Sampling attribute
+                        </button>
+<button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" This refers to the main criteria by which ranking is done.  One of *Degree*, *Citations* or *Productivity*."
+                          data-description=" This refers to the main criteria by which ranking is done.  One of *Degree*, *Citations* or *Productivity*."
+                          data-name="Ranking variable"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Ranking variable
+                        </button>
 <br>
 
             </div>

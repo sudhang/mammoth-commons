@@ -227,8 +227,50 @@ Delimiter
 <br>
 <h2 id='researchers'>Researchers</h2>
 <p><p>This is a Loader to load .csv files with information about researchers The <code>papers path</code> and <code>papers affiliations</code> should be given relative to your locally running instance (e.g.: <em>./data/researchers/Top&#95;researchers.csv</em>) The <code>Delimiter</code> should match the CSV file you have (e.g.: '|')</p> </p>
-<b>Parameters</b><br>Papers path
-Papers affiliations
+<b>Parameters</b><br><button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" The path to the paper citation graph."
+                          data-description=" The path to the paper citation graph."
+                          data-name="Paper graph path"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Paper graph path
+                        </button>
+<button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" The delimiter in the paper graph file."
+                          data-description=" The delimiter in the paper graph file."
+                          data-name="Paper graph delimiter"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Paper graph delimiter
+                        </button>
+<button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" The path to the paper affiliation map."
+                          data-description=" The path to the paper affiliation map."
+                          data-name="Paper affiliations path"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Paper affiliations path
+                        </button>
+<button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" The delimiter of the paper affiliation map file."
+                          data-description=" The delimiter of the paper affiliation map file."
+                          data-name="Paper affiliation delimiter"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Paper affiliation delimiter
+                        </button>
 <br>
 <h2 id='graph'>Graph</h2>
 <p><p>Loads the edges of a graph organized as rows of a comma-delimited file.</p> </p>

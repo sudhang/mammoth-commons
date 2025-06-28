@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dataset loaders</title>
+    <title>Datasets</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -87,12 +87,14 @@
     <div class="side-menu">
         <a href='#auto-csv'>Auto csv</a>
 <a href='#uci'>Uci</a>
+<a href='#read-any'>Read any</a>
 <a href='#custom-csv'>Custom csv</a>
 <a href='#csv-rankings'>Csv rankings</a>
 <a href='#researchers'>Researchers</a>
 <a href='#graph'>Graph</a>
 <a href='#images'>Images</a>
 <a href='#image-pairs'>Image pairs</a>
+<a href='#free-text'>Free text</a>
 
     </div>
 
@@ -100,7 +102,7 @@
     <div class="content-wrapper">
         <div class="main-content container">
             <div class="container">
-<h1 class='display-4 text-center my-4'>Dataset loaders</h1>
+<h1 class='display-4 text-center my-4'>Datasets</h1>
 <h2 id='auto-csv'>Auto csv</h2>
 <p><p>Loads a CSV file that contains numeric, categorical, and predictive data columns. This automatically detects the characteristics of the dataset being loaded, namely the delimiter that separates the columns, and whether each column contains numeric or categorical data. A <a href="https://pandas.pydata.org/">pandas</a> CSV reader is employed internally. The last categorical column is used as the dataset label. To load the file using different options (e.g., a subset of columns, a different label column) use the custom csv loader instead.</p> </p>
 <b>Parameters</b><br><button
@@ -139,13 +141,27 @@
                           onclick="showDescriptionModal(this)">
                           <i class="bi bi-info-circle"></i> Dataset name
                         </button>
+<br>
+<h2 id='read-any'>Read any</h2>
+<p><p>Loads a dataset for analysis from either a pre-loaded pandas DataFrame or a file in one of the supported formats: <code>.csv</code>, <code>.xls</code>, <code>.xlsx</code>, <code>.xlsm</code>, <code>.xlsb</code>, <code>.odf</code>, <code>.ods</code>, <code>.json</code>, <code>.html</code>, or <code>.htm</code>.</p>  <p>The module accepts either a raw DataFrame or a file path (local or URL). If a file path is provided, the data is automatically loaded using the appropriate pandas function based on the file extension. Basic preprocessing is applied to infer column types, and the specified target column is treated as the predictive label.</p>  <p>To customize the loading process (e.g., load a subset of columns, handle missing values, or change column type inference), additional parameters or a custom loader function may be provided.</p>  <p>The Data loader module is recommended to load and process local data also while training models which are intented to be tested using the ONNXEnsemble module.</p> </p>
+<b>Parameters</b><br><button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" Path or URL to the dataset file. Must have one of the supported extensions."
+                          data-description=" Path or URL to the dataset file. Must have one of the supported extensions."
+                          data-name="Dataset path"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Dataset path
+                        </button>
 <button
                           type="button"
                           class="btn btn-light"
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
-                          title=" The name of the predictive label."
-                          data-description=" The name of the predictive label."
+                          title=" The name of the column to treat as the predictive label."
+                          data-description=" The name of the column to treat as the predictive label."
                           data-name="Target"
                           onclick="showDescriptionModal(this)">
                           <i class="bi bi-info-circle"></i> Target
@@ -271,6 +287,28 @@ Delimiter
                           onclick="showDescriptionModal(this)">
                           <i class="bi bi-info-circle"></i> Paper affiliation delimiter
                         </button>
+<button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" Metadata mapping countries to respective codes found in researcher profilers. Prefer the default value."
+                          data-description=" Metadata mapping countries to respective codes found in researcher profilers. Prefer the default value."
+                          data-name="Country codes path"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Country codes path
+                        </button>
+<button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" Metadata of country divisions. Prefer the default value."
+                          data-description=" Metadata of country divisions. Prefer the default value."
+                          data-name="Country divisions path"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Country divisions path
+                        </button>
 <br>
 <h2 id='graph'>Graph</h2>
 <p><p>Loads the edges of a graph organized as rows of a comma-delimited file.</p> </p>
@@ -370,8 +408,19 @@ Delimiter
                           class="btn btn-light"
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
-                          title=" A comma-separated list of safe libraries that are allowed in the transformation code."
-                          data-description=" A comma-separated list of safe libraries that are allowed in the transformation code."
+                          title=" Number of subprocesses to use for data loading."
+                          data-description=" Number of subprocesses to use for data loading."
+                          data-name="Num workers"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Num workers
+                        </button>
+<button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" A comma-separated list of safe libraries that are allowed in the transformation code. As a safety measure against code injection attacks, an error will be created if libraries other than those are encountered."
+                          data-description=" A comma-separated list of safe libraries that are allowed in the transformation code. As a safety measure against code injection attacks, an error will be created if libraries other than those are encountered."
                           data-name="Safe libraries"
                           onclick="showDescriptionModal(this)">
                           <i class="bi bi-info-circle"></i> Safe libraries
@@ -461,11 +510,36 @@ Delimiter
                           class="btn btn-light"
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
-                          title=" A comma-separated list of safe libraries that are allowed in the transformation code."
-                          data-description=" A comma-separated list of safe libraries that are allowed in the transformation code."
+                          title=" Number of subprocesses to use for data loading."
+                          data-description=" Number of subprocesses to use for data loading."
+                          data-name="Num workers"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Num workers
+                        </button>
+<button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" A comma-separated list of safe libraries that are allowed in the transformation code. As a safety measure against code injection attacks, an error will be created if libraries other than those are encountered."
+                          data-description=" A comma-separated list of safe libraries that are allowed in the transformation code. As a safety measure against code injection attacks, an error will be created if libraries other than those are encountered."
                           data-name="Safe libraries"
                           onclick="showDescriptionModal(this)">
                           <i class="bi bi-info-circle"></i> Safe libraries
+                        </button>
+<br>
+<h2 id='free-text'>Free text</h2>
+<p><p>Sets a free text that can be used by text-based AI to perform various kinds of analysis, such as detecting biases and sentiment. Some modules may also use this text as a prompt to feed into large language models (LLMs). You may optionally provide a website's URL (starting with http: or https: to retrieve its textual contents.</p> </p>
+<b>Parameters</b><br><button
+                          type="button"
+                          class="btn btn-light"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title=" The text to be analyzed."
+                          data-description=" The text to be analyzed."
+                          data-name="Text"
+                          onclick="showDescriptionModal(this)">
+                          <i class="bi bi-info-circle"></i> Text
                         </button>
 <br>
 

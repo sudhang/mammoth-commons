@@ -10,6 +10,8 @@ def test_researchers_ranking_comparison():
     with testing.Env(
         data_researchers,
         model_mitigation_ranking,
+        #model_fair_ranking,
+        #model_hyperfair_ranking,
         exposure_distance_comparison,
     ) as env:
         dataset = env.data_researchers(
@@ -18,13 +20,15 @@ def test_researchers_ranking_comparison():
         )
 
         model_mitigation = env.model_mitigation_ranking()
+        #model_mitigation = env.model_fair_ranking()
+        #model_mitigation = env.model_hyperfair_ranking()
 
         analysis_outcome_mitigation = env.exposure_distance_comparison(
             dataset,
             model_mitigation,
             n_runs=10,
             sampling_attribute="Nationality_IncomeGroup",
-            ranking_variable="Degree",
+            ranking_variable="Citations",
             sensitive=["Gender"],
         )
         analysis_outcome_mitigation.show()

@@ -1,0 +1,10 @@
+component_metadata/
+build/
+dist/
+venv/
+mammoth/
+catalogue/
+tests/
+venv_test/
+data/
+__pycache__/

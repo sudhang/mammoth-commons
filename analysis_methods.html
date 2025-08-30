@@ -89,6 +89,7 @@
 <a href='#specific-concerns'>Specific concerns</a>
 <a href='#interactive-report'>Interactive report</a>
 <a href='#sklearn-audit'>Sklearn audit</a>
+<a href='#aif360'>Aif360</a>
 <a href='#optimal-transport'>Optimal transport</a>
 <a href='#bias-scan'>Bias scan</a>
 <a href='#image-bias-analysis'>Image bias analysis</a>
@@ -101,6 +102,7 @@
 <a href='#exposure-distance-comparison'>Exposure distance comparison</a>
 <a href='#augmentation-report'>Augmentation report</a>
 <a href='#text-debias'>Text debias</a>
+<a href='#llm-audit'>Llm audit</a>
 
     </div>
 
@@ -334,11 +336,11 @@ ignored in the analysis. The report may also include information about built-in 
                               class="btn btn-light"
                               data-bs-toggle="tooltip"
                               data-bs-placement="top"
-                              title=" Whether to consider all non-empty group intersections during analysis. This does nothing if there is only one sensitive attribute. It could be computationally intensive if too many group intersections are selected."
-                              data-description=" Whether to consider all non-empty group intersections during analysis. This does nothing if there is only one sensitive attribute. It could be computationally intensive if too many group intersections are selected."
-                              data-name="Intersectional"
+                              title=" Whether to consider only the provided groups, all non-empty group intersections, or all non-empty intersections while ignoring larger groups during analysis. This does nothing if there is only one sensitive attribute. It could be computationally intensive if too many group intersections are selected."
+                              data-description=" Whether to consider only the provided groups, all non-empty group intersections, or all non-empty intersections while ignoring larger groups during analysis. This does nothing if there is only one sensitive attribute. It could be computationally intensive if too many group intersections are selected."
+                              data-name="Intersections"
                               onclick="showDescriptionModal(this)">
-                              <i class="bi bi-info-circle"></i> Intersectional
+                              <i class="bi bi-info-circle"></i> Intersections
                             </button>
 <button
                               type="button"
@@ -383,6 +385,36 @@ ignored in the analysis. The report may also include information about built-in 
                               data-name="Top recommendations"
                               onclick="showDescriptionModal(this)">
                               <i class="bi bi-info-circle"></i> Top recommendations
+                            </button>
+<br>
+<h2 id='aif360'>Aif360</h2>
+<p><p><img src="https://ai-fairness-360.org/" alt="Based on AIF360" style="float: left; margin-right: 5px; margin-bottom: 5px; width: 80px;"/></p>
+
+<p>This module evaluates fairness using IBM's <a href="https://aif360.readthedocs.io">AIF360</a> library.
+It computes standard group fairness metrics for each sensitive attribute provided. If attributes are non-binary, they are
+binarized into one-hot encoded columns. Only categorical attributes are allowed.</p>
+</p>
+<b>Parameters</b><br><button
+                              type="button"
+                              class="btn btn-light"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              title=" The prediction label value which is considered favorable (i.e. "positive"). Default is 1 for binary classifiers."
+                              data-description=" The prediction label value which is considered favorable (i.e. "positive"). Default is 1 for binary classifiers."
+                              data-name="Favorable label"
+                              onclick="showDescriptionModal(this)">
+                              <i class="bi bi-info-circle"></i> Favorable label
+                            </button>
+<button
+                              type="button"
+                              class="btn btn-light"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              title=" The prediction label value which is considered unfavorable (i.e. "negative"). Default is 0 for binary classifiers."
+                              data-description=" The prediction label value which is considered unfavorable (i.e. "negative"). Default is 0 for binary classifiers."
+                              data-name="Unfavorable label"
+                              onclick="showDescriptionModal(this)">
+                              <i class="bi bi-info-circle"></i> Unfavorable label
                             </button>
 <br>
 <h2 id='optimal-transport'>Optimal transport</h2>
@@ -778,6 +810,25 @@ one pretrained for the English language and two trained
 on the <a href="https://github.com/Media-Bias-Group/Neural-Media-Bias-Detection-Using-Distant-Supervision-With-BABE">MBIC dataset</a>.
 </p>
 </p>
+<h2 id='llm-audit'>Llm audit</h2>
+<p><p>This assessment methodology sets an LLM at the role of fairness auditory and asks it to provide
+a sequence of votes, obtaining an assessment of whether given text is biased or neutral.
+Then, it follows a chain-of-thought approach for summarizing the reasoning associated with all
+valid votes (some votes may be invalid due to erroneous formatting) and eventually identifying
+actionable insights or explanations.</p>
+</p>
+<b>Parameters</b><br><button
+                              type="button"
+                              class="btn btn-light"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              title=" How many votes should be casted."
+                              data-description=" How many votes should be casted."
+                              data-name="Chain of votes"
+                              onclick="showDescriptionModal(this)">
+                              <i class="bi bi-info-circle"></i> Chain of votes
+                            </button>
+<br>
 
             </div>
         </div>

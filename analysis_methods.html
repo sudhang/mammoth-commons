@@ -112,7 +112,8 @@
             <div class="container">
 <h1 class='display-4 text-center my-4'>Analysis</h1>
 <h2 id='card'>Card</h2>
-<p><p><img src="https://fairbench.readthedocs.io/fairbench.png" alt="Based on FairBench" style="float: left; margin-right: 5px; margin-bottom: 5px; width: 80px;"/></p>
+<p><p><img src="https://fairbench.readthedocs.io/fairbench.png" alt="Based on FairBench"
+style="float: left; margin-right: 5px; margin-bottom: 5px; width: 80px;"/></p>
 
 <p>Generates a fairness and bias report using the <a href="https://github.com/mever-team/FairBench">FairBench</a>
 library. This explores many kinds of bias to paint a broad picture and help you decide on what is problematic
@@ -179,6 +180,17 @@ ignored in the analysis. The report may also include information about built-in 
                               data-name="Show non problematic"
                               onclick="showDescriptionModal(this)">
                               <i class="bi bi-info-circle"></i> Show non problematic
+                            </button>
+<button
+                              type="button"
+                              class="btn btn-light"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              title=" The minimum number of samples per group that should be considered during analysis - groups with less memers are ignored."
+                              data-description=" The minimum number of samples per group that should be considered during analysis - groups with less memers are ignored."
+                              data-name="Min group size"
+                              onclick="showDescriptionModal(this)">
+                              <i class="bi bi-info-circle"></i> Min group size
                             </button>
 <br>
 <h2 id='specific-concerns'>Specific concerns</h2>
@@ -386,13 +398,30 @@ ignored in the analysis. The report may also include information about built-in 
                               onclick="showDescriptionModal(this)">
                               <i class="bi bi-info-circle"></i> Top recommendations
                             </button>
+<button
+                              type="button"
+                              class="btn btn-light"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              title=" The minimum number of samples per group that should be considered during analysis - groups with less memers are ignored."
+                              data-description=" The minimum number of samples per group that should be considered during analysis - groups with less memers are ignored."
+                              data-name="Min group size"
+                              onclick="showDescriptionModal(this)">
+                              <i class="bi bi-info-circle"></i> Min group size
+                            </button>
 <br>
 <h2 id='aif360'>Aif360</h2>
 <p><p><img src="https://ai-fairness-360.org/" alt="Based on AIF360" style="float: left; margin-right: 5px; margin-bottom: 5px; width: 80px;"/></p>
 
-<p>This module evaluates fairness using IBM's <a href="https://aif360.readthedocs.io">AIF360</a> library.
+<p>This module evaluates fairness using IBM's <a href="https://aif360.readthedocs.io" target="_blank">AIF360</a> library.
 It computes standard group fairness metrics for each sensitive attribute provided. If attributes are non-binary, they are
 binarized into one-hot encoded columns. Only categorical attributes are allowed.</p>
+
+<p><span class="alert alert-warning alert-dismissible fade show" role="alert"
+style="display: inline-block; padding: 10px;"> <i class="bi bi-exclamation-triangle-fill"></i>
+This module is based on AIF360, which does not support generalized intersectional analysis.
+When needed, generate sensitive intersectional group labels in your dataset. However, these
+will always be computed against the rest of the population.</span></p>
 </p>
 <b>Parameters</b><br><button
                               type="button"
@@ -454,6 +483,7 @@ which is licensed under Apache License 2.0.</i></p></p>
 <br>
 <h2 id='bias-scan'>Bias scan</h2>
 <p><p>This module scans your dataset to estimate the most biased attributes or combinations of attributes.
+You can use those as inputs to other modules.
 For example, gender may only show bias when combined with socioeconomic status, despite the latter not
 bein inherently sensitive. If you have already marked some
 attributes as sensitive (such as race or gender), the module will <b>exclude</b> them from the scan. This allows
@@ -686,9 +716,6 @@ Two sets of visual outputs are processed:
 <p>
 Interactive charts allow users to hover for precise values, compare metrics between groups, and quickly identify fairness gaps.
 An explanation panel is included to define each metric and guide interpretation.
-</p>
-
-<p>
 This module is well suited for exploratory analysis, presentations, and fairness monitoring.
 It makes group disparities visible and intuitive, helping identify where further scrutiny or mitigation may be needed.
 </p>
@@ -710,9 +737,6 @@ Two types of fairness metrics are considered:
 <p>
 Results are presented in aligned tables with clear formatting, allowing users to compare outcomes across groups at a glance.
 Each metric is briefly explained to help interpret whether the model exhibits performance or outcome disparities for different groups.
-</p>
-
-<p>
 This module is particularly useful in evaluation pipelines, audit reports, and model reviews where transparency and fairness are essential.
 It helps teams assess group-level equity in model behavior using interpretable, tabular summaries.
 </p>
@@ -734,7 +758,8 @@ Qualitative creators
 <br>
 <h2 id='exposure-distance-comparison'>Exposure distance comparison</h2>
 <p><p>Compute the exposure distance between the protected and non-protected groups in the dataset and ranking.
-Sensitive attributes is a comma-separated list of the attributes relevant for fairness analysis. Currently, only <i>Gender</i> is supported.</p>
+Sensitive attributes is a comma-separated list of the attributes relevant for fairness analysis. Currently,
+only <i>Gender</i> is supported.</p>
 </p>
 <b>Parameters</b><br><button
                               type="button"

@@ -718,7 +718,7 @@ def exposure_distance_comparison(
     only *Gender* is supported.
     Args:
         n_runs: Choose a natural number between 1 and 100.
-        sampling_attribute: The value by which we group the analysis for finer-grained results. One of *Nationality&#95;IncomeGroup* or *Nationality&#95;Region*.
+        sampling_attribute: The value by which we group the analysis for finer-grained results. One of *Nationality&#95;IncomeGroup*, *Nationality&#95;Region* or *Academic_Stage*.
         ranking_variable: This refers to the main criteria by which ranking is done.  One of *Degree*, *Citations* or *Productivity*.
     """
 
@@ -813,14 +813,17 @@ def exposure_distance_comparison(
 
             print(f"{len(dataframe_filtered)} researchers in the category {category}")
 
+            # TODO: sud - Here, it should also pass on the graph,
+            # or maybe this dataframefiltering should happen only within the larger object?  i think that might cause more problems than it solves
+            # We can then use the graph in the various methods (like the breaking network method)
             # Rank the rows using the baseline (potentially non-fair) ranking
             if callable(model_baseline):
                 ranked_dataframe_normal_category = model_baseline(
-                    dataframe_filtered, ranking_variable
+                    dataframe_filtered, ranking_variable, researchers_graph
                 )
             else:
                 ranked_dataframe_normal_category = model_baseline.rank(
-                    dataframe_filtered, ranking_variable
+                    dataframe_filtered, ranking_variable, researchers_graph
                 )
             # Compute the exposure distance for the normal ranking
             ER_Old[category] = Exposure_distance(
@@ -841,7 +844,7 @@ def exposure_distance_comparison(
                 # Rank the rows using the model
                 if callable(model):
                     ranked_dataframe_mitigation_category = model(
-                        dataframe_filtered, ranking_variable
+                        dataframe_filtered, ranking_variable, researchers_graph
                     )
                 else:
                     ranked_dataframe_mitigation_category = model.rank(
@@ -849,6 +852,7 @@ def exposure_distance_comparison(
                         ranking_variable,
                         sensitive_attribute,
                         protected_attribute,
+                        researchers_graph,
                     )
 
                 ER_Mitigation[category][r] = Exposure_distance(

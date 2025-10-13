@@ -67,6 +67,19 @@ class Graph_CSH(Dataset):
         Couthorship_network = nx.Graph(Co_authorship_links)
         Couthorship_network.remove_node(np.nan)
 
+        # Compute academic year of the researchers:
+        First_year_author_key = {}
+        for i in DF_Affiliations.index:
+            author = DF_Affiliations["researcher_id"][i]
+            year = DF_Affiliations["year"][i]
+            try:
+                First_year_author_key[author] += [year]
+            except:
+                First_year_author_key[author] = [year]
+
+        for k, v in First_year_author_key.items():
+            First_year_author_key[k] = min(v)
+
         # Create values of citations, productivity, and degree:
         for u in Couthorship_network.nodes():
             Filtered_DF = self.papers_df[
@@ -75,6 +88,26 @@ class Graph_CSH(Dataset):
 
             # 0. Add protected attributes:
             max_year = self.papers_df.loc[Filtered_DF.year.idxmax()]["year"]
+
+            first_y = First_year_author_key[u]
+            if first_y is None:
+                age = None
+            else:
+                age = max(0, 2020 - int(first_y))
+            Couthorship_network.nodes[u]["Academic_Age"] = age
+
+            # Perhaps there is a better way to determine academic stage.  It surely
+            # is not entirely dependent on age.
+            if age is None:
+                stage = "Unknown"
+            elif age < 11:
+                stage = "Junior"
+            elif age < 26:
+                stage = "Middle"
+            else:
+                stage = "Senior"
+            Couthorship_network.nodes[u]["Academic_Stage"] = stage
+
             Filtered_affiliation = DF_Affiliations[
                 (DF_Affiliations.year == max_year)
                 & (DF_Affiliations.researcher_id == u)
@@ -106,7 +139,7 @@ class Graph_CSH(Dataset):
         self.G = Couthorship_network
 
     def return_num_nodes(self):
-        return self.papers_df.shape[0]
+        return self.G.number_of_nodes()
 
     def return_num_edges(self):
-        return self.affiliations_df.shape[0]
+        return self.G.number_of_edges()

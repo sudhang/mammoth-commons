@@ -4,7 +4,7 @@ from mammoth_commons.models.researcher_ranking import ResearcherRanking
 import random
 
 
-def normal_ranking(dataset, ranking_variable):
+def normal_ranking(dataset, ranking_variable, graph):
     """
     Rank a dataset based on a specified variable in descending order.
 
@@ -35,6 +35,7 @@ def Compute_mitigation_strategy(
     ranking_variable,
     sensitive_attribute,
     protected_attribute,
+    graph,
 ):
     """
     Computes a ranking adjustment based on selected mitigation strategies to ensure fairness in dataset.
@@ -114,6 +115,33 @@ def Compute_mitigation_strategy(
             ]
             # Decrement the remaining-count pool for the chosen group
             Len_group_in_ranking[Chosen_groups[-1]] -= 1
+
+            # Determine which positions each group will occupy
+            Positions = {
+                non_protected_attribute: [
+                    i
+                    for i, j in enumerate(Chosen_groups)
+                    if j == non_protected_attribute
+                ],
+                protected_attribute: [
+                    i for i, j in enumerate(Chosen_groups) if j == protected_attribute
+                ],
+            }
+
+            # Pick concrete researcher IDs to fill the positions from above
+            Chosen_researchers = {
+                i_ranking: Ranking_sets[non_protected_attribute].iloc[i_position]["id"]
+                for i_position, i_ranking in enumerate(
+                    Positions[non_protected_attribute]
+                )
+            }
+            for i_position, i_ranking in enumerate(Positions[protected_attribute]):
+                Chosen_researchers[i_ranking] = Ranking_sets[protected_attribute].iloc[
+                    i_position
+                ]["id"]
+
+            New_ranking = {r: i for i, r in Chosen_researchers.items()}
+
     elif mitigation_method == "Equal_parity":
         P_minority = 0.5
     elif mitigation_method == "Updated_statistical_parity":
@@ -124,28 +152,91 @@ def Compute_mitigation_strategy(
         raise NotImplementedError(
             "Internal_group_fairness method is not implemented yet."
         )
+    elif mitigation_method == "Breaking_network":
+        Total_size = Dataframe_ranking.shape[0]
+        Individuals_waiting_to_be_chosen = list(Dataframe_ranking.id)
+        Chosen_researchers = []
 
-    # Determine which positions each group will occupy
-    Positions = {
-        non_protected_attribute: [
-            i for i, j in enumerate(Chosen_groups) if j == non_protected_attribute
-        ],
-        protected_attribute: [
-            i for i, j in enumerate(Chosen_groups) if j == protected_attribute
-        ],
-    }
+        count = 0
+        while Total_size > count and len(Individuals_waiting_to_be_chosen) > 1:
+            count += 1
+            node = Individuals_waiting_to_be_chosen[0]
+            Neighbors = [u for u in graph.neighbors(node)]
+            Neighbors_in_ranking = [u for u in Neighbors if u in Chosen_researchers]
 
-    # Pick concrete researcher IDs to fill the positions from above
-    Chosen_researchers = {
-        i_ranking: Ranking_sets[non_protected_attribute].iloc[i_position]["id"]
-        for i_position, i_ranking in enumerate(Positions[non_protected_attribute])
-    }
-    for i_position, i_ranking in enumerate(Positions[protected_attribute]):
-        Chosen_researchers[i_ranking] = Ranking_sets[protected_attribute].iloc[
-            i_position
-        ]["id"]
+            # If the node does not have neighbors or all their neighbors have been assigned:
+            if (len(Neighbors_in_ranking) == 0) or (
+                len(Neighbors_in_ranking) == len(Neighbors)
+            ):
+                Chosen_researchers += [node]
+                Individuals_waiting_to_be_chosen = [
+                    i for i in Individuals_waiting_to_be_chosen if i != node
+                ]
+            else:
+                # Select a random position in the list and locate the node there:
+                pos_selected = random.randint(0, len(Individuals_waiting_to_be_chosen))
+                Individuals_waiting_to_be_chosen_1 = []
+                for i in (
+                    Individuals_waiting_to_be_chosen[1:pos_selected]
+                    + [node]
+                    + Individuals_waiting_to_be_chosen[pos_selected:]
+                ):
+                    if i not in Individuals_waiting_to_be_chosen_1:
+                        Individuals_waiting_to_be_chosen_1 += [i]
+                Individuals_waiting_to_be_chosen = Individuals_waiting_to_be_chosen_1
 
-    New_ranking = {r: i for i, r in Chosen_researchers.items()}
+        #             Total_size = len(Individuals_waiting_to_be_chosen)
+        Chosen_researchers += Individuals_waiting_to_be_chosen
+        New_ranking = {r: i - 1 for i, r in enumerate(Chosen_researchers)}
+    elif mitigation_method == "Reordering_network":
+        Total_size = Dataframe_ranking.shape[0]
+        Individuals_waiting_to_be_chosen = list(Dataframe_ranking.id)
+        Chosen_researchers = {}
+
+        count = 0
+        while Total_size > count and len(Individuals_waiting_to_be_chosen) > 0:
+
+            node = Individuals_waiting_to_be_chosen[0]
+            Neighbors = [u for u in G.neighbors(node)]
+            Neighbors_in_ranking = {
+                u: Chosen_researchers[u]
+                for u in Neighbors
+                if u in Chosen_researchers.keys()
+            }
+            if len(Neighbors_in_ranking) == 0:
+                Chosen_researchers[node] = len(Chosen_researchers)
+                Individuals_waiting_to_be_chosen = [
+                    i for i in Individuals_waiting_to_be_chosen if i != node
+                ]
+            else:
+                Neighbors_in_ranking = dict(
+                    sorted(Neighbors_in_ranking.items(), key=lambda item: item[1])
+                )
+                Neighbors_in_ranking[node] = len(Chosen_researchers)
+
+                Nodes_to_change_ranking_postion = list(Neighbors_in_ranking.keys())
+                Ranking_positions = list(Neighbors_in_ranking.values())
+
+                # Before iteration: [(A,0), (B,1), (C,2)]
+                # After iteration: [(C,0), (A,1), (B,2)]
+
+                # Change the ranking position of all the neighbors:
+                for u in Nodes_to_change_ranking_postion[:-1]:
+                    for r in Ranking_positions[1:]:
+                        Chosen_researchers[u] = r
+
+                # Move to the front in the new node the ranking of collaborators:
+                Chosen_researchers[node] = Ranking_positions[0]
+
+                Individuals_waiting_to_be_chosen = [
+                    i for i in Individuals_waiting_to_be_chosen if i != node
+                ]
+                count += 1
+
+        #             Total_size = len(Individuals_waiting_to_be_chosen)
+
+        #         Chosen_researchers += Individuals_waiting_to_be_chosen
+        New_ranking = {i: r - 1 for i, r in Chosen_researchers.items()}
 
     # Write the rank column
     Dataframe_ranking["Ranking_" + ranking_variable] = [
@@ -160,7 +251,8 @@ def mitigation_ranking(
     ranking_variable,
     sensitive_attribute,
     protected_attribute,
-    mitigation_method="Statistical_parity",
+    graph,
+    mitigation_method="Breaking_network",
 ):
     """
     Ranks mitigation strategies based on specified parameters to reduce bias in a given dataset.
@@ -194,6 +286,7 @@ def mitigation_ranking(
         ranking_variable,
         sensitive_attribute,
         protected_attribute,
+        graph,
     )
 
 
@@ -211,9 +304,7 @@ def model_normal_ranking() -> ResearcherRanking:
     return ResearcherRanking(normal_ranking)
 
 
-@loader(
-    namespace="csh", version="v003", python="3.11", packages=("networkx", "hyperfair")
-)
+@loader(namespace="csh", version="v003", python="3.11", packages=("networkx", "pandas"))
 def model_mitigation_ranking() -> ResearcherRanking:
     """
     Load the researcher ranking model incorporating a mitigation strategy.

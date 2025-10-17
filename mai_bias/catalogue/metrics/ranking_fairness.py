@@ -210,6 +210,146 @@ def boxplots_mitigation_strategies_pretty(
     return enc_str
 
 
+def Compute_assortativity_based_on_the_ranking(G, dataframe, ranking_variable):
+    """Function to compute the assortativity of the nodes based on their ranking position as a numerical (non categorical) variable."""
+
+    import networkx as nx
+
+    Rankings_nodes = []
+    for n in G.nodes():
+        try:
+            G.nodes[n]["Ranking_position"] = int(
+                dataframe[dataframe.id == n][ranking_variable]
+            )
+            Rankings_nodes += [n]
+        except:
+            pass
+
+    attribute = "Ranking_position"
+    Ranking_assortativity = np.round(
+        nx.numeric_assortativity_coefficient(G.subgraph(Rankings_nodes), attribute), 3
+    )
+    return Ranking_assortativity
+
+
+def cos_sim(a, b):
+    import numpy as np
+
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+    if a.size == 0 or b.size == 0:
+        return np.nan
+    denom = np.linalg.norm(a) * np.linalg.norm(b)  # np.linalg.norm (not np.norm)
+    if denom == 0:
+        return np.nan
+    return float(np.dot(a, b) / denom)
+
+
+def Compute_similarity_to_original_ranking(
+    Ranking_column, old_dataframe, new_dataframe
+):
+    # align rows by id, same length + ordering
+    cols = ["id", Ranking_column]
+    old = old_dataframe[cols].dropna()
+    new = new_dataframe[cols].dropna()
+
+    merged = old.merge(new, on="id", how="inner", suffixes=("_old", "_new"))
+    if merged.empty:
+        return np.nan
+
+    return cos_sim(
+        merged[Ranking_column + "_old"].to_numpy(),
+        merged[Ranking_column + "_new"].to_numpy(),
+    )
+
+
+def create_plots_to_show_results(old_dataframe, new_dataframe, n_runs, G, method):
+    """Plot to compare the difference in the assortativity and similariy for the new ranking with the strategies.
+    Returns a plot
+    """
+
+    import matplotlib.pyplot as plt
+    from . import networks_layouts
+    import networkx as nx
+
+    Old_ranking_assortativity = Compute_assortativity_based_on_the_ranking(
+        G, old_dataframe, ranking_variable="Ranking_Citations"
+    )
+
+    Ranking_assortativity = []
+    Ranking_similarity = []
+    for i in range(n_runs):
+        Ranking_assortativity += [
+            Compute_assortativity_based_on_the_ranking(
+                G, new_dataframe[i], ranking_variable="Ranking_Citations"
+            )
+        ]
+        Ranking_similarity += [
+            Compute_similarity_to_original_ranking(
+                "Ranking_Citations", old_dataframe, new_dataframe[i]
+            )
+        ]
+
+    plt.rcParams["mathtext.fontset"] = "dejavusans"
+    width = 0.6
+    font_size_out = 14
+    nrows = 1
+    ncols = 1
+
+    Colors_ = {
+        "Statistical_parity": "darkblue",
+        "Equal_parity": "gold",
+        "Considering_networks_1": "green",
+        "Considering_networks_2": "red",
+    }
+
+    fig, axes = plt.subplots(
+        ncols=ncols,
+        nrows=nrows,
+        figsize=(4 * ncols, 3 * nrows),
+        sharex=True,
+        sharey=False,
+        gridspec_kw={"width_ratios": [1]},
+    )
+
+    plt.scatter(
+        Old_ranking_assortativity,
+        1,
+        color="purple",
+        s=30,
+        alpha=0.7,
+        label="Original ranking",
+    )
+    plt.scatter(
+        Ranking_assortativity,
+        Ranking_similarity,
+        color=Colors_[method],
+        alpha=0.6,
+        s=30,
+        label=method,
+    )
+
+    plt.legend(loc="lower right")
+
+    for spine in ["right", "top"]:
+        axes.spines[spine].set_visible(False)
+
+    axes.tick_params("x", size=3, colors="black", labelsize=13, rotation=0)
+    axes.tick_params("y", size=2, colors="black", labelsize=12, rotation=0)
+
+    axes.set_ylabel("Ranking similarity", size=13)
+    axes.set_xlabel("Ranking assortativity", size=13)
+
+    plt.subplots_adjust(wspace=0.5, hspace=0.2)
+    plt.ylim(0, 1.1)
+    plt.xlim(0, 1)
+
+    # Save and encode
+    plt.close(fig)
+    enc_str = get_base64_encoded_image(fig)
+    return enc_str
+
+
 # Function to generate a base64 string from a matplotlib plot
 def get_base64_encoded_image(fig):
     buffer = BytesIO()
@@ -465,8 +605,15 @@ protected_fragment = """
             Post-Mitigation Distribution of {ranking_variable} across categories, separated by gender.
         </div>
     </div>
+    
+    <div class="visualization-full">
+        <h3 class="section-title">3. Scatterplot</h3>
+        <img src="data:image/png;base64,{scatterplot_img_str}" alt="Scatterplot" style="width: 100%;"/>
+        </div>
+    </div>
 
-    <h3 class="section-title">3. Exposure Distance Analysis</h3>
+
+    <h3 class="section-title">4. Exposure Distance Analysis</h3>
     <div class="visualization-full exposure-distance-visualization">
         <img src="data:image/png;base64,{er_viz_str}" alt="Exposure Distance Visualization" />
         <div class="figure-caption">
@@ -532,6 +679,7 @@ def generate_html_fragment(
     boxplot_img_str,
     network_img_str,
     normal_distribution_img_str,
+    scatterplot_img_str,
     distribution_img_str,
     n_runs,
 ):
@@ -553,6 +701,7 @@ def generate_html_fragment(
         network_img_str=network_img_str,
         ranking_variable=ranking_variable,
         normal_distribution_img_str=normal_distribution_img_str,
+        scatterplot_img_str=scatterplot_img_str,
         distribution_img_str=distribution_img_str,
         group_metrics_rows=generate_group_metrics_rows(ER_Old, ER_Mitigation, n_runs),
         max_disparity_old=max_disparity_old,
@@ -733,6 +882,7 @@ def exposure_distance_comparison(
     # 3.  Assemble an HTML report comparing baseline vs. mitigated exposure.
     import pandas as pd
     import matplotlib.cm as cm
+    import random
 
     # This dict will contain a generated HTML fragment for each possible protected group
     html_fragments = {}
@@ -752,6 +902,7 @@ def exposure_distance_comparison(
     all_groups = [g for g in set(data[sensitive[0]]) if pd.notna(g)]
 
     n_runs = int(n_runs)
+    ranked_dataframe_mitigation_all = []
 
     # Baseline (potentially unfair) ranking model
     model_baseline = model.baseline_rank  # Callable from loader
@@ -800,6 +951,7 @@ def exposure_distance_comparison(
 
         ER_Old = {}
         ER_Mitigation = {}
+        New_ranking_DDBB = {}
 
         ranked_dataframe_normal = pd.DataFrame()
         ranked_dataframe_mitigation = pd.DataFrame()
@@ -807,15 +959,14 @@ def exposure_distance_comparison(
         # Iterate over each possible category (eg: High-Income, Low-income etc.)
         for category in sorted(set(dataframe_sampling[sampling_attribute])):
 
+            New_ranking_DDBB[category] = {}
+
             dataframe_filtered = dataframe_sampling[
                 dataframe_sampling[sampling_attribute] == category
             ]
 
             print(f"{len(dataframe_filtered)} researchers in the category {category}")
 
-            # TODO: sud - Here, it should also pass on the graph,
-            # or maybe this dataframefiltering should happen only within the larger object?  i think that might cause more problems than it solves
-            # We can then use the graph in the various methods (like the breaking network method)
             # Rank the rows using the baseline (potentially non-fair) ranking
             if callable(model_baseline):
                 ranked_dataframe_normal_category = model_baseline(
@@ -855,6 +1006,9 @@ def exposure_distance_comparison(
                         researchers_graph,
                     )
 
+                # TODO: sud - clean up this crap;  wtaf this should already have Ranking_... columns, but it don't? wtf
+                New_ranking_DDBB[category][r] = ranked_dataframe_mitigation_category
+
                 ER_Mitigation[category][r] = Exposure_distance(
                     ranked_dataframe_mitigation_category,
                     ranking_variable=Old_ranking_variable,
@@ -863,6 +1017,71 @@ def exposure_distance_comparison(
                 )
                 ranked_dataframe_mitigation_category_runs.append(
                     ranked_dataframe_mitigation_category
+                )
+
+            # TODO: sud -
+            # merge the category-wise rankings into one overall ranking, in a size-proportional, randomized, order-preserving way
+            Dataframe_ranking = {}
+
+            for r in range(n_runs):
+                Choosen_individuals = []
+                Dict_categories_individuals = {
+                    i: list(New_ranking_DDBB[i][r].id) for i in New_ranking_DDBB.keys()
+                }
+
+                # Iterate to update the selections:
+                Total_size = sum([len(v) for v in Dict_categories_individuals.values()])
+                Probabilities = {
+                    i: len(v) / Total_size
+                    for i, v in Dict_categories_individuals.items()
+                }
+
+                while Total_size > 0:
+
+                    Random_value = random.random()
+
+                    Probabilities = {
+                        i: len(v) / Total_size
+                        for i, v in Dict_categories_individuals.items()
+                    }
+
+                    value = 0
+                    for i, v in Probabilities.items():
+                        value += v
+                        Probabilities[i] = value
+
+                    Chosen_category = [
+                        i for i, v in Probabilities.items() if Random_value < v
+                    ][0]
+                    Choosen_individuals += [
+                        Dict_categories_individuals[Chosen_category][0]
+                    ]
+                    try:
+                        Dict_categories_individuals[Chosen_category] = (
+                            Dict_categories_individuals[Chosen_category][1:]
+                        )
+                    except:
+                        Dict_categories_individuals = [
+                            i
+                            for i, v in Dict_categories_individuals.items()
+                            if i != Chosen_category
+                        ]
+                        pass
+
+                    Total_size = sum(
+                        [len(v) for v in Dict_categories_individuals.values()]
+                    )
+
+                Dataframe_ranking[r] = data[
+                    data.id.isin(Choosen_individuals)
+                ]  # Suspicious of this line
+                Dataframe_ranking[r]["Ranking_" + ranking_variable] = (
+                    [  # TODO: sud - Hopefully this is all that's needed
+                        Choosen_individuals.index(i) for i in Dataframe_ranking[r].id
+                    ]
+                )
+                Dataframe_ranking[r] = Dataframe_ranking[r].sort_values(
+                    "Ranking_" + ranking_variable
                 )
 
             # Concatenate all runs
@@ -882,6 +1101,10 @@ def exposure_distance_comparison(
             # Append to the main mitigation DataFrame
             ranked_dataframe_mitigation = pd.concat(
                 [ranked_dataframe_mitigation, mean_ranking_df]
+            )
+
+            ranked_dataframe_mitigation_all.append(
+                ranked_dataframe_mitigation_category_runs
             )
 
         # Build distribution plots
@@ -909,6 +1132,14 @@ def exposure_distance_comparison(
             n_runs=n_runs,
         )
 
+        foo_image = create_plots_to_show_results(
+            ranked_dataframe_normal,
+            Dataframe_ranking,
+            n_runs,
+            researchers_graph,
+            method="Statistical_parity",
+        )
+
         # Build the final HTML fragment for this protected group
         html_fragments[protected_group] = generate_html_fragment(
             ranking_variable=ranking_variable,
@@ -917,6 +1148,7 @@ def exposure_distance_comparison(
             boxplot_img_str=mitigation_strategies_image,
             network_img_str=network_image,
             normal_distribution_img_str=normal_distribution_image,
+            scatterplot_img_str=foo_image,
             distribution_img_str=distribution_image,
             n_runs=n_runs,
         )

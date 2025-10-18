@@ -263,7 +263,9 @@ def Compute_similarity_to_original_ranking(
     )
 
 
-def create_plots_to_show_results(old_dataframe, new_dataframe, n_runs, G, method):
+def create_plots_to_show_results(
+    old_dataframe, new_dataframe, n_runs, G, method, ranking_variable
+):
     """Plot to compare the difference in the assortativity and similariy for the new ranking with the strategies.
     Returns a plot
     """
@@ -273,7 +275,7 @@ def create_plots_to_show_results(old_dataframe, new_dataframe, n_runs, G, method
     import networkx as nx
 
     Old_ranking_assortativity = Compute_assortativity_based_on_the_ranking(
-        G, old_dataframe, ranking_variable="Ranking_Citations"
+        G, old_dataframe, ranking_variable=ranking_variable
     )
 
     Ranking_assortativity = []
@@ -281,12 +283,12 @@ def create_plots_to_show_results(old_dataframe, new_dataframe, n_runs, G, method
     for i in range(n_runs):
         Ranking_assortativity += [
             Compute_assortativity_based_on_the_ranking(
-                G, new_dataframe[i], ranking_variable="Ranking_Citations"
+                G, new_dataframe[i], ranking_variable=ranking_variable
             )
         ]
         Ranking_similarity += [
             Compute_similarity_to_original_ranking(
-                "Ranking_Citations", old_dataframe, new_dataframe[i]
+                ranking_variable, old_dataframe, new_dataframe[i]
             )
         ]
 
@@ -299,8 +301,8 @@ def create_plots_to_show_results(old_dataframe, new_dataframe, n_runs, G, method
     Colors_ = {
         "Statistical_parity": "darkblue",
         "Equal_parity": "gold",
-        "Considering_networks_1": "green",
-        "Considering_networks_2": "red",
+        "Breaking_network": "green",
+        "Reordering_network": "red",
     }
 
     fig, axes = plt.subplots(
@@ -1137,7 +1139,8 @@ def exposure_distance_comparison(
             Dataframe_ranking,
             n_runs,
             researchers_graph,
-            method="Statistical_parity",
+            method="Statistical_parity",  # TODO: sud - hardcoded!
+            ranking_variable="Ranking_" + Old_ranking_variable,
         )
 
         # Build the final HTML fragment for this protected group

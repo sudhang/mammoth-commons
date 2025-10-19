@@ -3,6 +3,10 @@ from mammoth_commons.integration import loader
 from mammoth_commons.models.researcher_ranking import ResearcherRanking
 import random
 
+from functools import partial
+from mammoth_commons.integration import loader
+from mammoth_commons.models.researcher_ranking import ResearcherRanking
+
 
 def normal_ranking(dataset, ranking_variable, graph):
     """
@@ -197,7 +201,7 @@ def Compute_mitigation_strategy(
         while Total_size > count and len(Individuals_waiting_to_be_chosen) > 0:
 
             node = Individuals_waiting_to_be_chosen[0]
-            Neighbors = [u for u in G.neighbors(node)]
+            Neighbors = [u for u in graph.neighbors(node)]
             Neighbors_in_ranking = {
                 u: Chosen_researchers[u]
                 for u in Neighbors
@@ -252,7 +256,7 @@ def mitigation_ranking(
     sensitive_attribute,
     protected_attribute,
     graph,
-    mitigation_method="Breaking_network",
+    mitigation_method="Statistical_parity",
 ):
     """
     Ranks mitigation strategies based on specified parameters to reduce bias in a given dataset.
@@ -304,6 +308,37 @@ def model_normal_ranking() -> ResearcherRanking:
     return ResearcherRanking(normal_ranking)
 
 
+def _mitigation_ranker_factory(method_name: str):
+    """Returns a rank(df, ranking_variable, sensitive, protected, graph, **kwargs) callable."""
+
+    def rank(
+        df, ranking_variable, sensitive_attribute, protected_attribute, graph, **kwargs
+    ):
+        return Compute_mitigation_strategy(
+            df,
+            method_name,
+            ranking_variable,
+            sensitive_attribute,
+            protected_attribute,
+            graph,
+        )
+
+    return rank
+
+
+@loader(namespace="csh", version="v003", python="3.11", packages=("networkx", "pandas"))
+def model_breaking_network_ranking() -> ResearcherRanking:
+    # mitigation = closure that will be called later by the framework
+    mitigation = _mitigation_ranker_factory("Breaking_network")
+    return ResearcherRanking(mitigation, normal_ranking)
+
+
+@loader(namespace="csh", version="v003", python="3.11", packages=("networkx", "pandas"))
+def model_reordering_network_ranking() -> ResearcherRanking:
+    mitigation = _mitigation_ranker_factory("Reordering_network")
+    return ResearcherRanking(mitigation, normal_ranking)
+
+
 @loader(namespace="csh", version="v003", python="3.11", packages=("networkx", "pandas"))
 def model_mitigation_ranking() -> ResearcherRanking:
     """
@@ -318,8 +353,10 @@ def model_mitigation_ranking() -> ResearcherRanking:
         ResearcherRanking: An instance of ResearcherRanking that contains both the mitigation-based
         ranking and the standard ranking for comparison.
     """
+    mitigation = _mitigation_ranker_factory("Statistical_parity")
+
     # Invoke the ResearcherRanking constructor with both mitigation and normal rankings.
-    return ResearcherRanking(mitigation_ranking, normal_ranking)
+    return ResearcherRanking(mitigation, normal_ranking)
 
 
 @loader(

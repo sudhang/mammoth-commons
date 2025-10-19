@@ -1021,71 +1021,6 @@ def exposure_distance_comparison(
                     ranked_dataframe_mitigation_category
                 )
 
-            # TODO: sud -
-            # merge the category-wise rankings into one overall ranking, in a size-proportional, randomized, order-preserving way
-            Dataframe_ranking = {}
-
-            for r in range(n_runs):
-                Choosen_individuals = []
-                Dict_categories_individuals = {
-                    i: list(New_ranking_DDBB[i][r].id) for i in New_ranking_DDBB.keys()
-                }
-
-                # Iterate to update the selections:
-                Total_size = sum([len(v) for v in Dict_categories_individuals.values()])
-                Probabilities = {
-                    i: len(v) / Total_size
-                    for i, v in Dict_categories_individuals.items()
-                }
-
-                while Total_size > 0:
-
-                    Random_value = random.random()
-
-                    Probabilities = {
-                        i: len(v) / Total_size
-                        for i, v in Dict_categories_individuals.items()
-                    }
-
-                    value = 0
-                    for i, v in Probabilities.items():
-                        value += v
-                        Probabilities[i] = value
-
-                    Chosen_category = [
-                        i for i, v in Probabilities.items() if Random_value < v
-                    ][0]
-                    Choosen_individuals += [
-                        Dict_categories_individuals[Chosen_category][0]
-                    ]
-                    try:
-                        Dict_categories_individuals[Chosen_category] = (
-                            Dict_categories_individuals[Chosen_category][1:]
-                        )
-                    except:
-                        Dict_categories_individuals = [
-                            i
-                            for i, v in Dict_categories_individuals.items()
-                            if i != Chosen_category
-                        ]
-                        pass
-
-                    Total_size = sum(
-                        [len(v) for v in Dict_categories_individuals.values()]
-                    )
-
-                Dataframe_ranking[r] = data[
-                    data.id.isin(Choosen_individuals)
-                ]  # Suspicious of this line
-                Dataframe_ranking[r]["Ranking_" + ranking_variable] = (
-                    [  # TODO: sud - Hopefully this is all that's needed
-                        Choosen_individuals.index(i) for i in Dataframe_ranking[r].id
-                    ]
-                )
-                Dataframe_ranking[r] = Dataframe_ranking[r].sort_values(
-                    "Ranking_" + ranking_variable
-                )
-
             # Concatenate all runs
             all_runs_df = pd.concat(ranked_dataframe_mitigation_category_runs)
 
@@ -1107,6 +1042,66 @@ def exposure_distance_comparison(
 
             ranked_dataframe_mitigation_all.append(
                 ranked_dataframe_mitigation_category_runs
+            )
+
+        # TODO: sud -
+        # merge the category-wise rankings into one overall ranking, in a size-proportional, randomized, order-preserving way
+        Dataframe_ranking = {}
+
+        for r in range(n_runs):
+            Choosen_individuals = []
+            Dict_categories_individuals = {
+                i: list(New_ranking_DDBB[i][r].id) for i in New_ranking_DDBB.keys()
+            }
+
+            # Iterate to update the selections:
+            Total_size = sum([len(v) for v in Dict_categories_individuals.values()])
+            Probabilities = {
+                i: len(v) / Total_size for i, v in Dict_categories_individuals.items()
+            }
+
+            while Total_size > 0:
+
+                Random_value = random.random()
+
+                Probabilities = {
+                    i: len(v) / Total_size
+                    for i, v in Dict_categories_individuals.items()
+                }
+
+                value = 0
+                for i, v in Probabilities.items():
+                    value += v
+                    Probabilities[i] = value
+
+                Chosen_category = [
+                    i for i, v in Probabilities.items() if Random_value < v
+                ][0]
+                Choosen_individuals += [Dict_categories_individuals[Chosen_category][0]]
+                try:
+                    Dict_categories_individuals[Chosen_category] = (
+                        Dict_categories_individuals[Chosen_category][1:]
+                    )
+                except:
+                    Dict_categories_individuals = [
+                        i
+                        for i, v in Dict_categories_individuals.items()
+                        if i != Chosen_category
+                    ]
+                    pass
+
+                Total_size = sum([len(v) for v in Dict_categories_individuals.values()])
+
+            Dataframe_ranking[r] = data[
+                data.id.isin(Choosen_individuals)
+            ]  # Suspicious of this line
+            Dataframe_ranking[r]["Ranking_" + ranking_variable] = (
+                [  # TODO: sud - Hopefully this is all that's needed
+                    Choosen_individuals.index(i) for i in Dataframe_ranking[r].id
+                ]
+            )
+            Dataframe_ranking[r] = Dataframe_ranking[r].sort_values(
+                "Ranking_" + ranking_variable
             )
 
         # Build distribution plots

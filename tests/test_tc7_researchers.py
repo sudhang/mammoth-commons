@@ -28,8 +28,8 @@ def test_researchers_ranking_comparison():
         # model_mitigation = env.model_mitigation_ranking()
         # model_mitigation = env.model_fair_ranking()
         # model_mitigation = env.model_hyperfair_ranking()
-        # model_mitigation = env.model_breaking_network_ranking()
-        model_mitigation = env.model_reordering_network_ranking()
+        model_mitigation = env.model_breaking_network_ranking()
+        # model_mitigation = env.model_reordering_network_ranking()
 
         analysis_outcome_mitigation = env.exposure_distance_comparison(
             dataset,

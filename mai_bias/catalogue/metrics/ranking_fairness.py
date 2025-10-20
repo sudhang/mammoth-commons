@@ -53,7 +53,8 @@ def Exposure_distance(
             (
                 sum(ranking_position_protected_attribute[:Min_size])
                 - sum(ranking_position_non_protected_attribute[:Min_size])
-            ),
+            )
+            / Min_size,
             2,
         )
     except Exception as e:
@@ -917,13 +918,19 @@ def exposure_distance_comparison(
 
     data = pd.DataFrame(Dataframe_nodes)
 
+    # Baseline (potentially unfair) ranking model
+    model_baseline = model.baseline_rank  # Callable from loader
+
+    # Rank the rows using the baseline (potentially non-fair) ranking
+    if callable(model_baseline):
+        ranked_global = model_baseline(data, ranking_variable, researchers_graph)
+    else:
+        ranked_global = model_baseline.rank(data, ranking_variable, researchers_graph)
+
     all_groups = [g for g in set(data[sensitive[0]]) if pd.notna(g)]
 
     n_runs = int(n_runs)
     ranked_dataframe_mitigation_all = []
-
-    # Baseline (potentially unfair) ranking model
-    model_baseline = model.baseline_rank  # Callable from loader
 
     # Iterate over each possible groups, treating each as the "protected" group in turn
     for protected_group in all_groups:
@@ -985,15 +992,10 @@ def exposure_distance_comparison(
 
             print(f"{len(dataframe_filtered)} researchers in the category {category}")
 
-            # Rank the rows using the baseline (potentially non-fair) ranking
-            if callable(model_baseline):
-                ranked_dataframe_normal_category = model_baseline(
-                    dataframe_filtered, ranking_variable, researchers_graph
-                )
-            else:
-                ranked_dataframe_normal_category = model_baseline.rank(
-                    dataframe_filtered, ranking_variable, researchers_graph
-                )
+            ranked_dataframe_normal_category = ranked_global[
+                ranked_global[sampling_attribute] == category
+            ]
+
             # Compute the exposure distance for the normal ranking
             ER_Old[category] = Exposure_distance(
                 ranked_dataframe_normal_category,
@@ -1001,9 +1003,7 @@ def exposure_distance_comparison(
                 sensitive_attribute=sensitive_attribute,
                 protected_attirbute=protected_attribute,
             )
-            ranked_dataframe_normal = pd.concat(
-                [ranked_dataframe_normal, ranked_dataframe_normal_category]
-            )
+            ranked_dataframe_normal = ranked_global
 
             # Compute the exposure distance for the mitigation ranking
             # but get the average over `n_runs` runs
@@ -1106,9 +1106,10 @@ def exposure_distance_comparison(
 
                 Total_size = sum([len(v) for v in Dict_categories_individuals.values()])
 
-            Dataframe_ranking[r] = data[
-                data.id.isin(Choosen_individuals)
-            ]  # Suspicious of this line
+            ordered = data.set_index("id").loc[Choosen_individuals].reset_index()
+            ordered["Ranking_" + ranking_variable] = range(1, len(ordered) + 1)
+            Dataframe_ranking[r] = ordered
+
             Dataframe_ranking[r]["Ranking_" + ranking_variable] = [
                 Choosen_individuals.index(i) for i in Dataframe_ranking[r].id
             ]

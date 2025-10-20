@@ -89,23 +89,17 @@ class Graph_CSH(Dataset):
             # 0. Add protected attributes:
             max_year = self.papers_df.loc[Filtered_DF.year.idxmax()]["year"]
 
-            first_y = First_year_author_key[u]
-            if first_y is None:
-                age = None
-            else:
-                age = max(0, 2020 - int(first_y))
+            first_pub_year = (
+                int(Filtered_DF["year"].min()) if not Filtered_DF.empty else None
+            )
+            age = None if first_pub_year is None else max(0, 2020 - first_pub_year)
             Couthorship_network.nodes[u]["Academic_Age"] = age
 
-            # Perhaps there is a better way to determine academic stage.  It surely
-            # is not entirely dependent on age.
-            if age is None:
-                stage = "Unknown"
-            elif age < 11:
-                stage = "Junior"
-            elif age < 26:
-                stage = "Middle"
-            else:
-                stage = "Senior"
+            stage = (
+                "Unknown"
+                if age is None
+                else ("Junior" if age < 11 else ("Middle" if age < 26 else "Senior"))
+            )
             Couthorship_network.nodes[u]["Academic_Stage"] = stage
 
             Filtered_affiliation = DF_Affiliations[

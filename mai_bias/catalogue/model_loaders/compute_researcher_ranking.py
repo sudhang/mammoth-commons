@@ -97,7 +97,6 @@ def Compute_mitigation_strategy(
     non_protected_attribute = [i for i in sensitive if i != protected_attribute][0]
     Len_groups = Dataframe_ranking[sensitive_attribute].value_counts()
 
-    # TODO: Remove all other mitigation_methods
     if mitigation_method == "Statistical_parity":
         # Chosen_groups would be a list with a desired ranking of group members
         # eg: ["female", "male", "male", "female", ...]
@@ -305,7 +304,7 @@ def model_normal_ranking() -> ResearcherRanking:
         ResearcherRanking: An instance of the ResearcherRanking class
         populated with normal ranking data.
     """
-    return ResearcherRanking(normal_ranking)
+    return ResearcherRanking("Normal Ranking", normal_ranking)
 
 
 def _mitigation_ranker_factory(method_name: str):
@@ -328,15 +327,25 @@ def _mitigation_ranker_factory(method_name: str):
 
 @loader(namespace="csh", version="v003", python="3.11", packages=("networkx", "pandas"))
 def model_breaking_network_ranking() -> ResearcherRanking:
-    # mitigation = closure that will be called later by the framework
+    """
+    Load the researcher ranking model incorporating a breaking network strategy.
+
+    Here, we construct a new ranking that avoids placing connected researchers near each other
+    in the ranking order. This is achieved by iteratively selecting researchers and ensuring that
+    their neighbors in the collaboration network are not ranked closely together, thereby "breaking"
+    clusters of connected researchers.
+    """
     mitigation = _mitigation_ranker_factory("Breaking_network")
-    return ResearcherRanking(mitigation, normal_ranking)
+    return ResearcherRanking("Breaking Network", mitigation, normal_ranking)
 
 
 @loader(namespace="csh", version="v003", python="3.11", packages=("networkx", "pandas"))
 def model_reordering_network_ranking() -> ResearcherRanking:
+    """
+    Load the researcher ranking model incorporating a reordering network strategy.
+    """
     mitigation = _mitigation_ranker_factory("Reordering_network")
-    return ResearcherRanking(mitigation, normal_ranking)
+    return ResearcherRanking("Reordering Network", mitigation, normal_ranking)
 
 
 @loader(namespace="csh", version="v003", python="3.11", packages=("networkx", "pandas"))
@@ -356,7 +365,7 @@ def model_mitigation_ranking() -> ResearcherRanking:
     mitigation = _mitigation_ranker_factory("Statistical_parity")
 
     # Invoke the ResearcherRanking constructor with both mitigation and normal rankings.
-    return ResearcherRanking(mitigation, normal_ranking)
+    return ResearcherRanking("Statistical Parity", mitigation, normal_ranking)
 
 
 @loader(
@@ -449,7 +458,7 @@ def model_hyperfair_ranking(
         return df_final
 
     # Note: this relies on the closure giving the right values for k, n_exp etc
-    return ResearcherRanking(hyperfair_mitigation_strategy, normal_ranking)
+    return ResearcherRanking("Hyperfair", hyperfair_mitigation_strategy, normal_ranking)
 
 
 @loader(
@@ -509,4 +518,4 @@ def model_fair_ranking(
         df_final.reset_index(drop=True)
         return df_final
 
-    return ResearcherRanking(mitigation_strategy, normal_ranking)
+    return ResearcherRanking("FA*IR", mitigation_strategy, normal_ranking)

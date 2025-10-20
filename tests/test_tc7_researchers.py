@@ -4,6 +4,8 @@ from mai_bias.catalogue.model_loaders.compute_researcher_ranking import (
     model_mitigation_ranking,
     model_fair_ranking,
     model_hyperfair_ranking,
+    model_breaking_network_ranking,
+    model_reordering_network_ranking,
 )
 from mai_bias.catalogue.metrics.ranking_fairness import exposure_distance_comparison
 
@@ -12,7 +14,9 @@ def test_researchers_ranking_comparison():
     with testing.Env(
         data_researchers,
         model_mitigation_ranking,
-        # model_fair_ranking,
+        model_breaking_network_ranking,
+        model_reordering_network_ranking,
+        model_fair_ranking,
         model_hyperfair_ranking,
         exposure_distance_comparison,
     ) as env:
@@ -21,9 +25,11 @@ def test_researchers_ranking_comparison():
             paper_affiliations_path="./data/researchers/affiliations.csv.tar.bz2",
         )
 
-        model_mitigation = env.model_mitigation_ranking()
+        # model_mitigation = env.model_mitigation_ranking()
         # model_mitigation = env.model_fair_ranking()
         # model_mitigation = env.model_hyperfair_ranking()
+        # model_mitigation = env.model_breaking_network_ranking()
+        model_mitigation = env.model_reordering_network_ranking()
 
         analysis_outcome_mitigation = env.exposure_distance_comparison(
             dataset,

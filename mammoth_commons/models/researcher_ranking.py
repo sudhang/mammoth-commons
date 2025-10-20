@@ -2,7 +2,8 @@ from mammoth_commons.models.model import Model
 
 
 class ResearcherRanking(Model):
-    def __init__(self, ranking_function, baseline_ranking_function=None):
+    def __init__(self, name, ranking_function, baseline_ranking_function=None):
+        self.name = name
         self.rank = ranking_function
         self.baseline_rank = baseline_ranking_function
 

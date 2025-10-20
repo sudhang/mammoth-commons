@@ -22,7 +22,6 @@ def Exposure_distance(
 
     # Remove rows with missing values in the sensitive attribute
     # e.g.: If sensitive_attribute is "Gender", remove rows where Gender is missing or NaN or None
-    # TODO: check if this "rank first and then filter" approach is appropriate
     dataset = dataset[~dataset[sensitive_attribute].isnull()]
 
     rankings_per_attribute = {}
@@ -129,7 +128,7 @@ def boxplots_mitigation_strategies_pretty(
 
     fig, axes = plt.subplots(figsize=(10, 7), constrained_layout=True)
 
-    Colors_boxplots = {"Statistical_parity": "darkblue", "Equal_parity": "gold"}
+    Colors_boxplots = {"Mitigated": "darkblue", "Equal_parity": "gold"}
 
     PROPS = {
         "boxprops": {"facecolor": "none", "edgecolor": Colors_boxplots[Method]},
@@ -298,12 +297,7 @@ def create_plots_to_show_results(
     nrows = 1
     ncols = 1
 
-    Colors_ = {
-        "Statistical_parity": "darkblue",
-        "Equal_parity": "gold",
-        "Breaking_network": "green",
-        "Reordering_network": "red",
-    }
+    Colors_ = {"Mitigated": "darkblue", "Equal_parity": "gold"}
 
     fig, axes = plt.subplots(
         ncols=ncols,
@@ -497,7 +491,7 @@ template = """
             margin: auto;
         }}
         .network-visualization img {{
-            max-width: 500px;
+            max-width: 100%;
             display: block;
             margin: auto;
         }}
@@ -527,6 +521,25 @@ template = """
         }}
         .hidden {{
             display: none;
+        }}
+
+        .main-content {{
+            max-width: 980px;
+            justify-self: center;
+        }}
+
+        .main-content img,
+        .visualization-full img,
+        .visualization-half img {{
+            width: 100%; 
+            max-width: 900px; 
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }}
+
+        .visualization-half img {{
+            max-height: 340px;
         }}
     </style>
     <script>
@@ -573,7 +586,7 @@ template = """
         <div class="dataset-info">
             <h3>Analysis Information</h3>
             <p><strong>Number of runs:</strong> {n_runs}</p>
-            <p><strong>Method:</strong> Statistical Parity</p>
+            <p><strong>Method:</strong> {method}</p>
             
             <h4>Group Statistics:</h4>
             {group_stats}
@@ -611,7 +624,6 @@ protected_fragment = """
     <div class="visualization-full">
         <h3 class="section-title">3. Scatterplot</h3>
         <img src="data:image/png;base64,{scatterplot_img_str}" alt="Scatterplot" style="width: 100%;"/>
-        </div>
     </div>
 
 
@@ -723,6 +735,7 @@ def generate_html_report(
     ranking_variable,
     fragments,
     n_runs,
+    method,
 ):
 
     male_fragment = fragments["male"]
@@ -736,6 +749,7 @@ def generate_html_report(
         male_fragment=male_fragment,
         female_fragment=female_fragment,
         n_runs=n_runs,
+        method=method,
     )
     return HTML(html_content)
 
@@ -872,6 +886,8 @@ def exposure_distance_comparison(
         sampling_attribute: The value by which we group the analysis for finer-grained results. One of *Nationality&#95;IncomeGroup*, *Nationality&#95;Region* or *Academic_Stage*.
         ranking_variable: This refers to the main criteria by which ranking is done.  One of *Degree*, *Citations* or *Productivity*.
     """
+    if isinstance(sensitive, str):
+        sensitive = [sensitive]
 
     # High-Level Flow:
     # ----------------
@@ -1008,7 +1024,6 @@ def exposure_distance_comparison(
                         researchers_graph,
                     )
 
-                # TODO: sud - clean up this crap;  wtaf this should already have Ranking_... columns, but it don't? wtf
                 New_ranking_DDBB[category][r] = ranked_dataframe_mitigation_category
 
                 ER_Mitigation[category][r] = Exposure_distance(
@@ -1044,7 +1059,6 @@ def exposure_distance_comparison(
                 ranked_dataframe_mitigation_category_runs
             )
 
-        # TODO: sud -
         # merge the category-wise rankings into one overall ranking, in a size-proportional, randomized, order-preserving way
         Dataframe_ranking = {}
 
@@ -1095,11 +1109,9 @@ def exposure_distance_comparison(
             Dataframe_ranking[r] = data[
                 data.id.isin(Choosen_individuals)
             ]  # Suspicious of this line
-            Dataframe_ranking[r]["Ranking_" + ranking_variable] = (
-                [  # TODO: sud - Hopefully this is all that's needed
-                    Choosen_individuals.index(i) for i in Dataframe_ranking[r].id
-                ]
-            )
+            Dataframe_ranking[r]["Ranking_" + ranking_variable] = [
+                Choosen_individuals.index(i) for i in Dataframe_ranking[r].id
+            ]
             Dataframe_ranking[r] = Dataframe_ranking[r].sort_values(
                 "Ranking_" + ranking_variable
             )
@@ -1124,7 +1136,7 @@ def exposure_distance_comparison(
         mitigation_strategies_image = boxplots_mitigation_strategies_pretty(
             ER_Old,
             ER_Mitigation,
-            Method="Statistical_parity",
+            Method="Mitigated",
             sampling_attribute=sampling_attribute,
             n_runs=n_runs,
         )
@@ -1134,7 +1146,7 @@ def exposure_distance_comparison(
             Dataframe_ranking,
             n_runs,
             researchers_graph,
-            method="Statistical_parity",  # TODO: sud - hardcoded!
+            method="Mitigated",
             ranking_variable="Ranking_" + Old_ranking_variable,
         )
 
@@ -1159,4 +1171,5 @@ def exposure_distance_comparison(
         ranking_variable=ranking_variable,
         fragments=html_fragments,
         n_runs=n_runs,
+        method=model.name if hasattr(model, "name") else "Mitigated",
     )
